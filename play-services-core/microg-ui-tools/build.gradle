@@ -32,11 +32,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    lintOptions {
-        // TODO: Remove MissingTranslation once we have stable strings and proper translations.
+    namespace 'org.microg.tools.ui'
+    lint {
         disable 'MissingTranslation'
     }
-    namespace 'org.microg.tools.ui'
 }
 
 dependencies {

@@ -108,9 +108,6 @@ android {
         }
     }
 
-    lintOptions {
-        disable 'MissingTranslation', 'InvalidPackage', 'BatteryLife', 'ImpliedQuantity', 'MissingQuantity', 'InvalidWakeLockTag'
-    }
 
     buildTypes {
         release {
@@ -143,10 +140,15 @@ android {
     }
 
     packagingOptions {
-        exclude 'META-INF/ASL2.0'
         jniLibs {
             useLegacyPackaging false
         }
+        resources {
+            excludes += ['META-INF/ASL2.0']
+        }
+    }
+    lint {
+        disable 'MissingTranslation', 'InvalidPackage', 'BatteryLife', 'ImpliedQuantity', 'MissingQuantity', 'InvalidWakeLockTag'
     }
 }
 

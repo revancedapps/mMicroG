@@ -51,9 +51,6 @@ android {
         ]
     }
 
-    lintOptions {
-        disable "MissingTranslation", "InvalidPackage", "BatteryLife", "ImpliedQuantity", "MissingQuantity"
-    }
 
     buildTypes {
         release {
@@ -67,6 +64,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     namespace 'org.microg.gms.maps.vtm'
+    lint {
+        disable 'MissingTranslation', 'InvalidPackage', 'BatteryLife', 'ImpliedQuantity', 'MissingQuantity'
+    }
 }
 
 if (file("user.gradle").exists()) {
