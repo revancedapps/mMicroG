@@ -21,6 +21,7 @@ import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -38,6 +39,8 @@ import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import androidx.webkit.WebViewFeature;
+import androidx.webkit.WebSettingsCompat;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -56,7 +59,7 @@ import org.microg.gms.checkin.CheckinManager;
 import org.microg.gms.checkin.LastCheckinInfo;
 import org.microg.gms.common.HttpFormClient;
 import org.microg.gms.common.Utils;
-import org.microg.gms.droidguard.core.DroidGuardResultCreator;
+//import org.microg.gms.droidguard.core.DroidGuardResultCreator;
 import org.microg.gms.people.PeopleManager;
 import org.microg.gms.profile.Build;
 import org.microg.gms.profile.ProfileManager;
@@ -78,6 +81,9 @@ import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT;
 import static org.microg.gms.auth.AuthPrefs.isAuthVisible;
+//import static org.microg.gms.checkin.CheckinPreferences.hideLauncherIcon;
+import static org.microg.gms.checkin.CheckinPreferences.isSpoofingEnabled;
+import static org.microg.gms.checkin.CheckinPreferences.setSpoofingEnabled;
 import static org.microg.gms.common.Constants.GMS_PACKAGE_NAME;
 import static org.microg.gms.common.Constants.GMS_VERSION_CODE;
 import static org.microg.gms.common.Constants.GOOGLE_GMS_PACKAGE_NAME;
@@ -96,8 +102,8 @@ public class LoginActivity extends AssistantActivity {
     private static final String MAGIC_USER_AGENT = " MinuteMaid";
     private static final String COOKIE_OAUTH_TOKEN = "oauth_token";
 
-    private final FidoHandler fidoHandler = new FidoHandler(this);
-    private final DroidGuardHandler dgHandler = new DroidGuardHandler(this);
+//    private final FidoHandler fidoHandler = new FidoHandler(this);
+//    private final DroidGuardHandler dgHandler = new DroidGuardHandler(this);
 
     private WebView webView;
     private String accountType;
@@ -163,10 +169,32 @@ public class LoginActivity extends AssistantActivity {
     }
 
     @Override
+    protected void onHuaweiButtonClicked() {
+        super.onHuaweiButtonClicked();
+        state++;
+        if (state == 1) {
+//            hideLauncherIcon(this, false);
+//            UtilsKt.hideIcon(this, false);
+            if (!isSpoofingEnabled(this)) {
+                LastCheckinInfo.clear(this);
+                setSpoofingEnabled(this, true);
+            }
+            init();
+        } else if (state == -1) {
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+    }
+
+    @Override
     protected void onNextButtonClicked() {
         super.onNextButtonClicked();
         state++;
         if (state == 1) {
+            if (isSpoofingEnabled(this)) {
+                LastCheckinInfo.clear(this);
+                setSpoofingEnabled(this, false);
+            }
             init();
         } else if (state == -1) {
             setResult(RESULT_CANCELED);
@@ -211,6 +239,21 @@ public class LoginActivity extends AssistantActivity {
         webView.setLayoutParams(new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.setBackgroundColor(Color.TRANSPARENT);
+
+        if (SDK_INT < 32) {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                boolean systemIsDark =
+                        (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) ==
+                                Configuration.UI_MODE_NIGHT_YES;
+                WebSettingsCompat.setForceDark(webView.getSettings(),
+                        systemIsDark ? WebSettingsCompat.FORCE_DARK_ON : WebSettingsCompat.FORCE_DARK_OFF);
+            }
+        }
+        else {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
+            }
+        }
         prepareWebViewSettings(context, webView.getSettings());
         return webView;
     }
@@ -294,7 +337,7 @@ public class LoginActivity extends AssistantActivity {
                 .token(oAuthToken).isAccessToken()
                 .addAccount()
                 .getAccountId()
-                .droidguardResults(null /*TODO*/)
+//                .droidguardResults(null /*TODO*/)
                 .getResponseAsync(new HttpFormClient.Callback<AuthResponse>() {
                     @Override
                     public void onResponse(AuthResponse response) {
@@ -418,11 +461,11 @@ public class LoginActivity extends AssistantActivity {
             Log.d(TAG, "JSBridge: backupSyncOptIn");
         }
 
-        @JavascriptInterface
-        public final void cancelFido2SignRequest() {
-            Log.d(TAG, "JSBridge: cancelFido2SignRequest");
-            fidoHandler.cancel();
-        }
+//        @JavascriptInterface
+//        public final void cancelFido2SignRequest() {
+//            Log.d(TAG, "JSBridge: cancelFido2SignRequest");
+//            fidoHandler.cancel();
+//        }
 
         @JavascriptInterface
         public void clearOldLoginAttempts() {
@@ -492,22 +535,22 @@ public class LoginActivity extends AssistantActivity {
             return 1;
         }
 
-        @JavascriptInterface
-        public final void getDroidGuardResult(String s) {
-            Log.d(TAG, "JSBridge: getDroidGuardResult");
-            try {
-                JSONArray array = new JSONArray(s);
-                StringBuilder sb = new StringBuilder();
-                sb.append(getAndroidId()).append(":").append(getBuildVersionSdk()).append(":").append(getPlayServicesVersionCode());
-                for (int i = 0; i < array.length(); i++) {
-                    sb.append(":").append(array.getString(i));
-                }
-                String dg = Base64.encodeToString(MessageDigest.getInstance("SHA1").digest(sb.toString().getBytes()), 0);
-                dgHandler.start(dg);
-            } catch (Exception e) {
-                // Ignore
-            }
-        }
+//        @JavascriptInterface
+//        public final void getDroidGuardResult(String s) {
+//            Log.d(TAG, "JSBridge: getDroidGuardResult");
+//            try {
+//                JSONArray array = new JSONArray(s);
+//                StringBuilder sb = new StringBuilder();
+//                sb.append(getAndroidId()).append(":").append(getBuildVersionSdk()).append(":").append(getPlayServicesVersionCode());
+//                for (int i = 0; i < array.length(); i++) {
+//                    sb.append(":").append(array.getString(i));
+//                }
+//                String dg = Base64.encodeToString(MessageDigest.getInstance("SHA1").digest(sb.toString().getBytes()), 0);
+//                dgHandler.start(dg);
+//            } catch (Exception e) {
+//                // Ignore
+//            }
+//        }
 
         @JavascriptInterface
         public final String getFactoryResetChallenges() {
@@ -574,11 +617,11 @@ public class LoginActivity extends AssistantActivity {
             Log.d(TAG, "JSBridge: notifyOnTermsOfServiceAccepted");
         }
 
-        @JavascriptInterface
-        public final void sendFido2SkUiEvent(String event) {
-            Log.d(TAG, "JSBridge: sendFido2SkUiEvent");
-            fidoHandler.onEvent(event);
-        }
+//        @JavascriptInterface
+//        public final void sendFido2SkUiEvent(String event) {
+//            Log.d(TAG, "JSBridge: sendFido2SkUiEvent");
+//            fidoHandler.onEvent(event);
+//        }
 
         @JavascriptInterface
         public final void setAccountIdentifier(String accountName) {
@@ -649,11 +692,11 @@ public class LoginActivity extends AssistantActivity {
             Log.d(TAG, "JSBridge: startAfw");
         }
 
-        @JavascriptInterface
-        public final void startFido2SignRequest(String request) {
-            Log.d(TAG, "JSBridge: startFido2SignRequest");
-            fidoHandler.startSignRequest(request);
-        }
+//        @JavascriptInterface
+//        public final void startFido2SignRequest(String request) {
+//            Log.d(TAG, "JSBridge: startFido2SignRequest");
+//            fidoHandler.startSignRequest(request);
+//        }
 
     }
 }

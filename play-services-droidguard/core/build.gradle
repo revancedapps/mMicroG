@@ -31,12 +31,12 @@ wire {
 }
 
 android {
-    compileSdkVersion androidCompileSdk
-    buildToolsVersion "$androidBuildVersionTools"
+    compileSdk androidCompileSdk
+    // buildToolsVersion "$androidBuildVersionTools"
 
     defaultConfig {
-        versionName "23.25.12"
-        versionCode 232512000
+        versionName baseVersion
+        versionCode appVersionCode
         minSdkVersion androidMinSdk
         targetSdkVersion androidTargetSdk
         buildConfigField("String", "VERSION_NAME", "\"${defaultConfig.versionName}\"")

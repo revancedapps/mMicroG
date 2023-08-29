@@ -20,7 +20,7 @@ apply plugin: 'kotlin-android'
 dependencies {
     implementation project(':play-services-maps')
     implementation project(':play-services-base-core')
-    implementation project(':play-services-location')
+//    implementation project(':play-services-location')
     implementation('org.maplibre.gl:android-sdk:10.2.0')
     implementation("org.maplibre.gl:android-plugin-annotation-v9:1.0.0") {
         exclude group: 'com.google.android.gms'
@@ -31,11 +31,10 @@ dependencies {
 }
 
 android {
-    compileSdkVersion androidCompileSdk
-    buildToolsVersion "$androidBuildVersionTools"
+    compileSdk androidCompileSdk
+    // buildToolsVersion "$androidBuildVersionTools"
 
     defaultConfig {
-        versionName version
         minSdkVersion androidMinSdk
         targetSdkVersion androidTargetSdk
         buildConfigField "String", "MAPBOX_KEY", "\"${localProperties.getProperty("mapbox.key", System.getenv('MAPBOX_VECTOR_TILES_KEY') ?: "")}\""
@@ -64,6 +63,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    namespace 'org.microg.gms.maps.mapbox'
 }
 
 if (file('user.gradle').exists()) {
