@@ -11,3 +11,5 @@ local.properties
 .settings
 .classpath
 .project
+*.apk
+play-services-core/default/release/
